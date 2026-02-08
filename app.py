@@ -12,6 +12,68 @@ st.set_page_config(
 # Carregando os dados
 df = pd.read_csv("https://raw.githubusercontent.com/vqrca/dashboard_salarios_dados/refs/heads/main/dados-imersao-final.csv")
 
+def traduzir_cargo(titulo):
+    # 1. Dicionário de Tradução EXATA (Mapeamento Direto)
+    # Coloque aqui os cargos que aparecem no seu Top 10 para ficarem perfeitos
+    mapa_exato = {
+        'Data Scientist': 'Cientista de Dados',
+        'Data Engineer': 'Engenheiro de Dados',
+        'Data Analyst': 'Analista de Dados',
+        'Machine Learning Engineer': 'Engenheiro de Machine Learning',
+        'Analytics Engineer': 'Engenheiro de Analytics',
+        'Research Scientist': 'Cientista Pesquisador',
+        'Applied Scientist': 'Cientista Aplicado',
+        'Research Team Lead': 'Líder de Equipe de Pesquisa',
+        'Analytics Engineering Manager': 'Gerente de Eng. de Analytics',
+        'Data Science Tech Lead': 'Líder Técnico de Data Science',
+        'Applied AI ML Lead': 'Líder de IA Aplicada e ML',
+        'Head of Applied AI': 'Chefe de IA Aplicada',
+        'Head of Machine Learning': 'Chefe de Machine Learning',
+        'Machine Learning Performance Engineer': 'Eng. de Performance em ML',
+        'Director of Product Management': 'Diretor de Gestão de Produtos',
+        'Engineering Manager': 'Gerente de Engenharia',
+        'AWS Data Architect': 'Arquiteto de Dados AWS',
+        'AI Scientist': 'Cientista de IA',
+        'Big Data Engineer': 'Engenheiro de Big Data',
+        'Computer Vision Engineer': 'Engenheiro de Visão Computacional',
+        'NLP Engineer': 'Engenheiro de NLP',
+        'Solutions Engineer': 'Engenheiro de Soluções',
+        'Systems Engineer': 'Engenheiro de Sistemas',
+        'Associate': 'Associado',
+        'Data Specialist' : 'Especialista de Dados'
+    }
+    
+    # Se o cargo estiver na lista exata, retorna ele pronto
+    if titulo in mapa_exato:
+        return mapa_exato[titulo]   
+    
+    # 
+    titulo = titulo.replace('Engineering', 'Engenharia') # Corrige o bug "Engenheiroing"
+    titulo = titulo.replace('Science', 'Ciência')
+    
+    # Tradução dos comuns
+    traducoes = {
+        'Engineer': 'Engenheiro',
+        'Scientist': 'Cientista',
+        'Analyst': 'Analista',
+        'Manager': 'Gerente',
+        'Director': 'Diretor',
+        'Lead': 'Líder',
+        'Head': 'Chefe',
+        'Architect': 'Arquiteto',
+        'Consultant': 'Consultor',
+        'Research': 'Pesquisa',
+        'Applied': 'Aplicado'
+    }
+    
+    for en, pt in traducoes.items():
+        titulo = titulo.replace(en, pt)
+        
+    return titulo
+
+# Aplica a nova função
+df['cargo'] = df['cargo'].apply(traduzir_cargo)
+
 #               Filtros
 st.sidebar.header("🔍 Filtros")
 
@@ -128,21 +190,64 @@ with col_graf3:
         st.warning("Nenhum dado para exibir no gráfico dos tipos de trabalho.")
 
 with col_graf4:
+
+    # Verifica se há dados filtrados
     if not df_filtrado.empty:
-        df_ds = df_filtrado[df_filtrado['cargo'] == 'Data Scientist']
-        media_ds_pais = df_ds.groupby("residencia_iso3")['usd'].mean().reset_index()
-        grafico_paises = px.choropleth(media_ds_pais,
-        locations='residencia_iso3',
-        color='usd',
-         color_continuous_scale='rdylgn',
-            title='Salário médio de Cientista de Dados por país',
-            labels={'usd': 'Salário médio (USD)', 'residencia_iso3': 'País'})
-        grafico_paises.update_layout(title_x=0.1)
-        st.plotly_chart(grafico_paises, use_container_width=True)
+        
+        # Calcula a média de TODOS os cargos no país
+        pais_stats = df_filtrado.groupby('residencia_iso3')['usd'].agg(['mean', 'count']).reset_index()
+        pais_stats.columns = ['residencia_iso3', 'media_salarial_pais', 'qtd_profissionais']
+
+        # 2. Identificando o "Cargo de Maior Valor" por País
+        # Agrupa por País e Cargo, calcula a média e ordena
+        cargo_stats = df_filtrado.groupby(['residencia_iso3', 'cargo'])['usd'].mean().reset_index()
+        cargo_stats = cargo_stats.sort_values(['residencia_iso3', 'usd'], ascending=[True, False])
+        
+        # Pega apenas o primeiro registro (o maior salário) de cada país
+        top_cargos = cargo_stats.drop_duplicates(subset=['residencia_iso3'])
+        top_cargos = top_cargos[['residencia_iso3', 'cargo', 'usd']]
+        top_cargos.columns = ['residencia_iso3', 'cargo_top', 'media_cargo_top']
+
+        # 3. Juntando as informações
+        dados_mapa = pd.merge(pais_stats, top_cargos, on='residencia_iso3')
+
+        # 4. Criando o Gráfico
+        fig = px.choropleth(
+            dados_mapa,
+            locations='residencia_iso3',      # Código ISO do país
+            color='media_salarial_pais',      # Cor baseada na média geral do país
+            hover_name='residencia_iso3',     # Título do tooltip
+            hover_data={
+                'residencia_iso3': False,     # Oculta o ISO no tooltip (já está no título)
+                'media_salarial_pais': ':$.2f', # Formata moeda
+                'cargo_top': True,            # Mostra o cargo top
+                'media_cargo_top': ':$.2f',   # Mostra o salário do cargo top
+                'qtd_profissionais': True     # Mostra quantos dados temos (bom pra contexto)
+            },
+            color_continuous_scale='Viridis', # Escala de cor profissional
+            title='Média Salarial Global e Cargo Mais Valorizado por País'
+        )
+
+        # Ajustes visuais
+        fig.update_layout(
+            title_x=0, # Alinhado à esquerda como padrão moderno
+            margin=dict(l=0, r=0, t=50, b=0), # Remove bordas brancas
+            geo=dict(showframe=False, showcoastlines=False, projection_type='equirectangular')
+        )
+        
+        # Melhorando os rótulos do tooltip
+        fig.update_traces(
+            hovertemplate="<b>%{hovertext}</b><br><br>" +
+            "Média Geral do País: %{z:$.2f}<br>" +
+            "Cargo Mais Pago: %{customdata[1]}<br>" +
+            "Média do Cargo Top: %{customdata[2]:$.2f}<br>" +
+            "Profissionais na base: %{customdata[3]}"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
 
     else:
-        st.warning("Nenhum dado para exibir no gráfico de países.")
-    
+        st.warning("Nenhum dado disponível para gerar o mapa.")
 #Tabela com dados Detalhado
 
 st.subheader("Dados Detalhados")
