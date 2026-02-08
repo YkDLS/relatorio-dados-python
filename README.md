@@ -19,19 +19,13 @@ Este projeto é um dashboard interativo desenvolvido para explorar e analisar te
 <img width="1053" height="392" alt="image" src="https://github.com/user-attachments/assets/8990c0d8-03ba-4cc2-8253-3c127a0307ef" />
 
 Gráficos 1 e 2
-<img width="1346" height="517" alt="image" src="https://github.com/user-attachments/assets/2144a19c-dda3-4fc0-9b0a-8ef302649cc9" />
+<img width="1343" height="527" alt="Grafico12" src="https://github.com/user-attachments/assets/91f65e1a-accd-4e98-bf78-dc24bfa66c54" />
 
 #Gráficos 3 e 4
 <img width="1055" height="439" alt="image" src="https://github.com/user-attachments/assets/b9096973-da0e-4134-ab72-21aa3c0af141" />
 
 #tabela de Dados e Filtros
 <img width="1346" height="517" alt="image" src="https://github.com/user-attachments/assets/53d4bf8b-9c05-4332-9ec5-9fb7efb7da6c" />
-
-
-
-| Visão Geral (KPIs) | Top Cargos |
-|:---:|:---:|
-| <img src="assets/overview.png" width="400"> | <img src="assets/top_jobs.png" width="400"> |
 
 ---
 
