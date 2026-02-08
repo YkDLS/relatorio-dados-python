@@ -1,5 +1,3 @@
-# relatorio-dados-python
-
 # 📊 Dashboard de Análise de Salários - Data Science & Tech
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://relatorio-dados-python13-2026.streamlit.app/)
