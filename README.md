@@ -7,7 +7,7 @@
 
 Este projeto é um dashboard interativo desenvolvido para explorar e analisar tendências salariais globais na área de Dados e Tecnologia. Utilizando dados reais de 2020 a 2025, a aplicação oferece insights sobre remuneração por cargo, senioridade, localização e modelo de trabalho.
 
-🔗 **Acesse o Dashboard Online:** [Clique aqui para visualizar](https://relatorio-dados-python13-2026.streamlit.app/)
+🔗 **Acesse o Dashboard Online:** [Clique aqui para visualizar]([https://relatorio-dados-python13-2026.streamlit.app/](https://relatorio-dados-python-012026.streamlit.app/))
 
 ---
 
